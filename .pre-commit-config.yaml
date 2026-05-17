@@ -1,0 +1,89 @@
+# pre-commit hook configuration for terraform-portfolio
+#
+# Install pre-commit:  pip install pre-commit
+# Install the hooks:   pre-commit install
+# Run manually:        pre-commit run --all-files
+#
+# The hooks here mirror the quality gate in the GitHub Actions
+# terraform-plan-apply workflow. Running them locally means CI rarely
+# fails on format or lint issues — those are caught before the push.
+#
+# Hook order is intentional: cheap checks first (fmt, whitespace),
+# expensive checks last (tflint, Checkov). A fast failure avoids
+# waiting for a slow scan on obviously broken code.
+
+repos:
+
+  # ── General file hygiene ──────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        # args: [--allow-multiple-documents]  # Uncomment if you have multi-doc YAML
+      - id: check-merge-conflict
+      - id: detect-private-key
+        # Catches accidentally staged private keys before they hit git history.
+        # Cannot undo a leaked secret after a push — catch it here.
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  # ── Terraform-specific hooks ──────────────────────────────────────────────
+  # Source: https://github.com/antonbabenko/pre-commit-terraform
+  # Verify latest release: https://github.com/antonbabenko/pre-commit-terraform/releases
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.99.0
+    hooks:
+
+      # terraform fmt — canonical formatter.
+      # -recursive catches nested modules. -diff shows exactly what changed.
+      # This is the single most common CI failure; catch it locally.
+      - id: terraform_fmt
+        args:
+          - --args=-recursive
+          - --args=-diff
+
+      # terraform validate — catches syntax errors and type mismatches.
+      # -backend=false skips remote backend init so the hook works without
+      # cloud credentials. Provider schema is still downloaded on first run.
+      - id: terraform_validate
+        args:
+          - --init-flags=-backend=false
+
+      # tflint — Terraform linter using the .tflint.hcl in the repo root.
+      # Catches undeclared variables, deprecated syntax, provider-specific
+      # rule violations (azurerm + google rulesets configured in .tflint.hcl).
+      # --init downloads provider plugins declared in .tflint.hcl on first run.
+      - id: terraform_tflint
+        args:
+          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+          - --args=--format=compact
+
+      # Checkov — IaC security scanner. Replaces archived tfsec.
+      # --framework terraform scopes to Terraform checks only.
+      # --compact reduces log noise on clean runs.
+      # Soft-fail here (--soft-fail) because pre-commit should not block on
+      # findings that require discussion — CI is the hard gate.
+      # Remove --soft-fail if you want local commits to block on findings.
+      - id: terraform_checkov
+        args:
+          - --args=--framework=terraform
+          - --args=--compact
+          - --args=--soft-fail
+
+      # terraform-docs — regenerates the inputs/outputs table in each module's
+      # README.md from the variable and output definitions.
+      # Requires marker comments in the README to know where to inject:
+      #
+      #   <!-- BEGIN_TF_DOCS -->
+      #   <!-- END_TF_DOCS -->
+      #
+      # Disabled by default in this repo because READMEs are hand-authored.
+      # Enable by uncommenting if you want auto-generated input/output tables.
+      #
+      # - id: terraform_docs
+      #   args:
+      #     - --hook-config=--path-to-file=README.md
+      #     - --hook-config=--add-to-existing-file=true
+      #     - --hook-config=--create-file-if-not-exist=false
