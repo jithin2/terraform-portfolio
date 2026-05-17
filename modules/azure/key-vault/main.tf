@@ -1,38 +1,47 @@
-# TODO(Step 2): Implement Key Vault resources.
-#
-# Resources:
-#
-#   data "azurerm_client_config" "current"
-#     · Used to get the current tenant_id and caller object_id at plan time.
-#       Required by azurerm_key_vault.tenant_id.
-#
-#   azurerm_key_vault "this"
-#     · enable_rbac_authorization = true (module default and recommendation)
-#       RBAC mode: access governed by standard Azure role assignments (Key Vault Secrets User,
-#       Key Vault Secrets Officer, Key Vault Administrator). Clear separation of management
-#       plane vs data plane roles.
-#       Vault access policies (legacy): avoid in new deployments — limited to 1024 policies
-#       per vault and cannot be managed with Azure PIM.
-#     · soft_delete_retention_days: default 90 (max). Cannot be reduced once set.
-#       purge_protection_enabled: default true for production. Once enabled, cannot be
-#       disabled and the vault cannot be force-purged before retention period.
-#     · network_acls: default_action = "Deny", bypass = "AzureServices"
-#       In private-endpoint mode: ip_rules = [], virtual_network_subnet_ids = []
-#       In firewall mode (no PEP): add subnet IDs to virtual_network_subnet_ids.
-#       These two patterns are mutually exclusive — do not mix them.
-#
-#   azurerm_private_endpoint "kv" (count = var.enable_private_endpoint ? 1 : 0)
-#     · Subnet must be a dedicated PEP subnet with private_endpoint_network_policies = "Disabled"
-#     · private_service_connection: subresource_names = ["vault"]
-#
-#   azurerm_private_dns_zone_virtual_network_link "kv" (count = same condition)
-#     · Only needed if the DNS zone is not already linked to the VNet.
-#     · Consider making this conditional on a separate var to avoid conflicts when the
-#       zone is linked by a hub networking module.
-#
-# Key design decisions:
-#   - Role assignments are NOT created inside this module. The module outputs vault_id
-#     and vault_uri; callers create role assignments using azurerm_role_assignment.
-#     Reason: the set of identities that need access is caller-specific, not module-specific.
-#   - purge_protection_enabled defaults to true. Callers must explicitly set it to false
-#     for dev/test environments where vaults need to be fully deleted.
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_key_vault" "this" {
+  name                       = var.name
+  location                   = var.location
+  resource_group_name        = var.resource_group_name
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  sku_name                   = var.sku_name
+  soft_delete_retention_days = var.soft_delete_retention_days
+  purge_protection_enabled   = var.purge_protection_enabled
+  enable_rbac_authorization  = var.enable_rbac_authorization
+
+  network_acls {
+    default_action             = var.network_acls.default_action
+    bypass                     = var.network_acls.bypass
+    ip_rules                   = var.network_acls.ip_rules
+    virtual_network_subnet_ids = var.network_acls.virtual_network_subnet_ids
+  }
+
+  tags = var.tags
+}
+
+resource "azurerm_private_endpoint" "kv" {
+  count = var.enable_private_endpoint ? 1 : 0
+
+  name                = "${var.name}-pep"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  subnet_id           = var.private_endpoint_subnet_id
+
+  private_service_connection {
+    name                           = "${var.name}-psc"
+    private_connection_resource_id = azurerm_key_vault.this.id
+    subresource_names              = ["vault"]
+    is_manual_connection           = false
+  }
+
+  dynamic "private_dns_zone_group" {
+    for_each = var.private_dns_zone_id != null ? [1] : []
+    content {
+      name                 = "default"
+      private_dns_zone_ids = [var.private_dns_zone_id]
+    }
+  }
+
+  tags = var.tags
+}

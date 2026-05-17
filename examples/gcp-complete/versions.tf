@@ -1,5 +1,5 @@
-# TODO(Step 4): Add provider and version constraints.
-# TODO: Verify google provider version before deploying.
+# Verify the google provider version range against https://registry.terraform.io/providers/hashicorp/google/latest
+# before deploying to any environment.
 
 terraform {
   required_version = ">= 1.6.0"
@@ -12,7 +12,7 @@ terraform {
   }
 }
 
-# provider "google" {
-#   project = var.project_id
-#   region  = var.region
-# }
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}

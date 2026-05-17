@@ -1,5 +1,6 @@
-# TODO(Step 4): Pin both providers.
-# TODO: Verify both version ranges before deploying.
+# Verify both provider version ranges before deploying.
+# azurerm: https://registry.terraform.io/providers/hashicorp/azurerm/latest
+# google:  https://registry.terraform.io/providers/hashicorp/google/latest
 
 terraform {
   required_version = ">= 1.6.0"
@@ -14,4 +15,13 @@ terraform {
       version = "~> 6.0"
     }
   }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+provider "google" {
+  project = var.gcp_project_id
+  region  = var.gcp_region
 }

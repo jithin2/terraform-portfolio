@@ -1,6 +1,19 @@
-# TODO(Step 4): Show naming parity across clouds.
-#
-# output "azure_cluster_name" { value = module.azure_naming_aks.name }  # prod-eus-demo-aks
-# output "gcp_cluster_name"   { value = module.gcp_naming_gke.name }    # prod-ue1-demo-gke
-# output "azure_oidc_issuer"  { value = module.aks.oidc_issuer_url }
-# output "gcp_wi_pool"        { value = module.gke.workload_identity_pool }
+output "azure_cluster_name" {
+  description = "AKS cluster name — prod-eus-demo-aks pattern."
+  value       = module.azure_aks.cluster_name
+}
+
+output "gcp_cluster_name" {
+  description = "GKE cluster name — prod-ue1-demo-gke pattern."
+  value       = module.gcp_gke.cluster_name
+}
+
+output "azure_oidc_issuer_url" {
+  description = "AKS OIDC issuer URL for Workload Identity federation."
+  value       = module.azure_aks.oidc_issuer_url
+}
+
+output "gcp_workload_identity_pool" {
+  description = "GKE Workload Identity pool for IAM binding member strings."
+  value       = module.gcp_gke.workload_identity_pool
+}

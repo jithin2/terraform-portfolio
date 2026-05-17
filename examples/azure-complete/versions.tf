@@ -1,5 +1,5 @@
-# TODO(Step 4): Add provider and version constraints.
-# TODO: Verify azurerm version range before deploying.
+# Verify the azurerm version range against https://registry.terraform.io/providers/hashicorp/azurerm/latest
+# before deploying to any environment.
 
 terraform {
   required_version = ">= 1.6.0"
@@ -12,11 +12,11 @@ terraform {
   }
 }
 
-# provider "azurerm" {
-#   features {
-#     key_vault {
-#       purge_soft_delete_on_destroy    = false
-#       recover_soft_deleted_key_vaults = true
-#     }
-#   }
-# }
+provider "azurerm" {
+  features {
+    key_vault {
+      purge_soft_delete_on_destroy    = false
+      recover_soft_deleted_key_vaults = true
+    }
+  }
+}
