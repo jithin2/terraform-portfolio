@@ -1,7 +1,5 @@
 # examples/multicloud
 
-<!-- TODO(Step 4): Expand after example is implemented. -->
-
 ## What This Demonstrates
 
 The same logical application deployed on both Azure and GCP in a single Terraform

@@ -1,7 +1,5 @@
 # azure/vnet
 
-<!-- TODO(Step 2): Expand after module is implemented. -->
-
 ## Purpose
 
 Creates a hub/spoke-ready Azure Virtual Network with:
@@ -11,8 +9,6 @@ Creates a hub/spoke-ready Azure Virtual Network with:
 - Custom DNS server support (for hub/spoke with Azure Private DNS Resolver)
 
 ## Inputs
-
-<!-- TODO: Run `terraform-docs markdown table .` after variables.tf is complete. -->
 
 | Name | Description | Type | Default | Required |
 |---|---|---|---|---|

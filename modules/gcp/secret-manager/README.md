@@ -1,7 +1,5 @@
 # gcp/secret-manager
 
-<!-- TODO(Step 3): Expand after module is implemented. -->
-
 ## Purpose
 
 Creates GCP Secret Manager secrets with:
@@ -10,8 +8,6 @@ Creates GCP Secret Manager secrets with:
 - Additive IAM bindings per secret (`iam_member`, not `iam_binding`)
 
 ## Inputs
-
-<!-- TODO: Run `terraform-docs markdown table .` after variables.tf is complete. -->
 
 | Name | Description | Type | Default | Required |
 |---|---|---|---|---|

@@ -2,7 +2,7 @@
 
 A library of opinionated Terraform modules for **Azure** and **GCP**, built to enterprise patterns.
 
-*Authored by [Jithin Karkera](https://github.com/YOUR_USERNAME)*
+*Authored by [Jithin Karkera](https://github.com/jithin2)*
 
 > **Provider version notice:** All `versions.tf` files pin to a tested range.
 > Verify those ranges against current releases before deploying to any environment:
@@ -81,7 +81,7 @@ Reference a module directly from this repository at a pinned tag:
 
 ```hcl
 module "aks" {
-  source = "git::https://github.com/YOUR_USERNAME/terraform-portfolio.git//modules/azure/aks-cluster?ref=v1.2.0"
+  source = "git::https://github.com/jithin2/terraform-portfolio.git//modules/azure/aks-cluster?ref=v1.2.0"
 
   resource_group_name = azurerm_resource_group.main.name
   location            = "eastus"
@@ -311,7 +311,7 @@ Consumers should pin to a tag, not to `main`:
 
 ```hcl
 module "aks" {
-  source = "git::https://github.com/YOUR_USERNAME/terraform-portfolio.git//modules/azure/aks-cluster?ref=v1.2.0"
+  source = "git::https://github.com/jithin2/terraform-portfolio.git//modules/azure/aks-cluster?ref=v1.2.0"
 }
 ```
 
@@ -323,11 +323,11 @@ locals {
 }
 
 module "aks" {
-  source = "git::https://github.com/YOUR_USERNAME/terraform-portfolio.git//modules/azure/aks-cluster?ref=${local.module_ref}"
+  source = "git::https://github.com/jithin2/terraform-portfolio.git//modules/azure/aks-cluster?ref=${local.module_ref}"
 }
 
 module "vnet" {
-  source = "git::https://github.com/YOUR_USERNAME/terraform-portfolio.git//modules/azure/vnet?ref=${local.module_ref}"
+  source = "git::https://github.com/jithin2/terraform-portfolio.git//modules/azure/vnet?ref=${local.module_ref}"
 }
 ```
 

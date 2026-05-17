@@ -1,7 +1,5 @@
 # gcp/gke-cluster
 
-<!-- TODO(Step 3): Expand after module is implemented. -->
-
 ## Purpose
 
 Creates a GKE Standard cluster with:
@@ -13,8 +11,6 @@ Creates a GKE Standard cluster with:
 - Dedicated minimal node service account (not the default Compute SA)
 
 ## Inputs
-
-<!-- TODO: Run `terraform-docs markdown table .` after variables.tf is complete. -->
 
 | Name | Description | Type | Default | Required |
 |---|---|---|---|---|

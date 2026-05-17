@@ -1,7 +1,5 @@
 # shared/naming
 
-<!-- TODO(Step 2): Expand after module is implemented. terraform-docs will auto-generate the inputs/outputs tables. -->
-
 ## Purpose
 
 Produces deterministic resource names and standard labels from four structured inputs:
@@ -13,8 +11,6 @@ All Azure and GCP modules in this repository consume this module, ensuring resou
 in equivalent logical positions on both clouds follow the same naming convention.
 
 ## Inputs
-
-<!-- TODO: Run `terraform-docs markdown table .` after variables.tf is complete and inject here. -->
 
 | Name | Description | Type | Default | Required |
 |---|---|---|---|---|

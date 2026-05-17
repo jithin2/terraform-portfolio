@@ -1,7 +1,5 @@
 # azure/key-vault
 
-<!-- TODO(Step 2): Expand after module is implemented. -->
-
 ## Purpose
 
 Creates an Azure Key Vault configured for enterprise use:
@@ -15,8 +13,6 @@ It exports `vault_id` so callers can assign `Key Vault Secrets User` or
 `Key Vault Secrets Officer` to the specific identities that need access.
 
 ## Inputs
-
-<!-- TODO: Run `terraform-docs markdown table .` after variables.tf is complete. -->
 
 | Name | Description | Type | Default | Required |
 |---|---|---|---|---|

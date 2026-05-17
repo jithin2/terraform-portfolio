@@ -1,7 +1,5 @@
 # gcp/vpc
 
-<!-- TODO(Step 3): Expand after module is implemented. -->
-
 ## Purpose
 
 Creates a custom-mode GCP VPC with:
@@ -14,8 +12,6 @@ VPC firewall rules are **not** created in this module — they belong in the con
 configuration to avoid conflicts with GKE-managed auto-rules.
 
 ## Inputs
-
-<!-- TODO: Run `terraform-docs markdown table .` after variables.tf is complete. -->
 
 | Name | Description | Type | Default | Required |
 |---|---|---|---|---|

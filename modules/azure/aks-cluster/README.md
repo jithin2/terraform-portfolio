@@ -1,7 +1,5 @@
 # azure/aks-cluster
 
-<!-- TODO(Step 2): Expand after module is implemented. -->
-
 ## Purpose
 
 Manages an AKS cluster with:
@@ -13,8 +11,6 @@ Manages an AKS cluster with:
 - Separation of control-plane identity and kubelet identity
 
 ## Inputs
-
-<!-- TODO: Run `terraform-docs markdown table .` after variables.tf is complete. -->
 
 | Name | Description | Type | Default | Required |
 |---|---|---|---|---|

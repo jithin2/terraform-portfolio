@@ -1,7 +1,5 @@
 # examples/azure-complete
 
-<!-- TODO(Step 4): Expand after example is implemented. -->
-
 ## What This Demonstrates
 
 End-to-end Azure stack: VNet + AKS (private cluster) + Key Vault (private endpoint).

@@ -1,0 +1,44 @@
+# Local Terraform working directories — never commit these
+**/.terraform/*
+
+# State files — managed remotely (Azure Storage / GCS backend) in real deployments
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Variable files can contain secrets — exclude by default
+# Commit a *.tfvars.example with dummy values instead
+*.tfvars
+*.tfvars.json
+
+# Terraform override files (local developer overrides, not meant for sharing)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform plan output files (can contain sensitive data in the diff)
+*.tfplan
+
+# Terraform CLI configuration
+.terraformrc
+terraform.rc
+
+# NOTE: .terraform.lock.hcl (provider lock file) SHOULD be committed.
+# It pins provider versions across the team and prevents silent upgrades.
+# Do NOT add it here.
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Editor working files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
