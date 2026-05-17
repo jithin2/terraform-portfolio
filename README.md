@@ -285,8 +285,9 @@ For module-level testing, `terraform test`'s built-in lifecycle management is th
 Terratest makes more sense for integration tests that span multiple modules and need custom
 assertions (e.g., "the AKS API server is reachable from within the VNet").
 
-**TODO:** Wire GitHub Actions with OIDC federated credentials to a limited Azure subscription
-and GCP project, then commit `.tftest.hcl` files per module.
+The next step is wiring GitHub Actions with OIDC federated credentials to a sandboxed Azure
+subscription and GCP project and committing `.tftest.hcl` files per module — the structure
+above is already designed for that path.
 
 ---
 

@@ -55,8 +55,10 @@ Do not run tests against shared or production environments.
 - Authentication via Application Default Credentials (`gcloud auth application-default login`) or
   `GOOGLE_APPLICATION_CREDENTIALS` pointing to a SA key file.
 
-**TODO:** Replace SA key file auth with OIDC federated credentials for GitHub Actions CI.
-See root README testing section for rationale.
+OIDC federated credentials are the recommended path for GitHub Actions CI — no long-lived keys.
+See the root README testing section and the companion repo
+[github-actions-platform-templates](https://github.com/jithin2/github-actions-platform-templates)
+for the full OIDC setup.
 
 ## Module Conventions
 
