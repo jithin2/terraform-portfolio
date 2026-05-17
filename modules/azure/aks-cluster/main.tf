@@ -1,41 +1,118 @@
-# TODO(Step 2): Implement AKS cluster resources.
-#
-# Resources:
-#
-#   azurerm_kubernetes_cluster "this"
-#     · default_node_pool — system pool only; apply CriticalAddonsOnly=true:NoSchedule taint
-#       so user workloads don't land here. Requires consumers to add the toleration.
-#     · identity — SystemAssigned or user-assigned depending on var.identity_type.
-#       NOTE: The control-plane identity is separate from the kubelet identity.
-#       Control-plane identity needs Network Contributor on the subnet (Azure CNI)
-#       and Private DNS Zone Contributor if private_cluster_enabled + BYO DNS zone.
-#     · oidc_issuer_enabled = true, workload_identity_enabled = true
-#       These are a pair — enabling one without the other is a no-op for pod auth.
-#     · private_cluster_enabled, private_dns_zone_id
-#       When private_dns_zone_id = "System", Azure manages the zone in MC_ RG.
-#       Pass an actual zone ID for hub/spoke topologies (BYO pattern).
-#     · network_profile with network_plugin = "azure" (Azure CNI) preferred for
-#       enterprise: predictable IP allocation, no overlay network, direct pod IPs.
-#       Requires larger subnets (pre-allocates IPs per node).
-#     · azure_active_directory_role_based_access_control — managed AAD integration.
-#       azure_rbac_enabled = true lets you use Azure role assignments for K8s RBAC.
-#
-#   azurerm_kubernetes_cluster_node_pool "user" (for_each over var.user_node_pools)
-#     · mode = "User" — never route system add-ons here
-#     · enable_auto_scaling, min_count, max_count from pool config
-#     · node_taints, node_labels from pool config for workload isolation
-#     · os_disk_type = "Ephemeral" preferred for stateless nodes: faster attach,
-#       billed as part of VM, no separate managed disk cost.
-#       Not all VM SKUs support ephemeral — validate against the SKU.
-#
-#   azurerm_role_assignment "kubelet_subnet" (conditional on Azure CNI)
-#     · Network Contributor on the node subnet, assigned to the kubelet identity.
-#     · Scope to the specific subnet, not the whole VNet — least-privilege.
-#
-# Key design decisions:
-#   - for_each on user_node_pools (map keyed by pool name) produces stable state
-#     addresses. Using count would shift addresses if a middle pool is removed.
-#   - kube_config_raw is output as sensitive — callers store it in Key Vault or
-#     Secrets Manager, not in terraform.tfstate on a shared backend.
-#   - kubernetes_version is optional; when null, AKS uses the latest recommended.
-#     Pinning is recommended for production — AKS can force-upgrade unversioned clusters.
+resource "azurerm_kubernetes_cluster" "this" {
+  name                = var.cluster_name
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  dns_prefix          = var.cluster_name
+  kubernetes_version  = var.kubernetes_version
+  sku_tier            = var.sku_tier
+  node_resource_group = var.node_resource_group
+
+  default_node_pool {
+    name                         = var.default_node_pool.name
+    vm_size                      = var.default_node_pool.vm_size
+    auto_scaling_enabled         = true
+    min_count                    = var.default_node_pool.min_count
+    max_count                    = var.default_node_pool.max_count
+    vnet_subnet_id               = var.default_node_pool.vnet_subnet_id
+    os_disk_type                 = var.default_node_pool.os_disk_type
+    os_disk_size_gb              = var.default_node_pool.os_disk_size_gb
+    only_critical_addons_enabled = var.default_node_pool.only_critical_addons
+    orchestrator_version         = var.kubernetes_version
+
+    upgrade_settings {
+      max_surge = "33%"
+    }
+  }
+
+  identity {
+    type         = var.identity_type
+    identity_ids = var.identity_type == "UserAssigned" ? [var.control_plane_identity_id] : null
+  }
+
+  # kubelet_identity is the per-pod identity used by Workload Identity.
+  # It is distinct from the control-plane identity above.
+  # Without this block AKS auto-creates a system-assigned kubelet identity.
+  dynamic "kubelet_identity" {
+    for_each = var.identity_type == "UserAssigned" ? [1] : []
+    content {
+      user_assigned_identity_id = var.kubelet_identity.user_assigned_identity_id
+      client_id                 = var.kubelet_identity.client_id
+      object_id                 = var.kubelet_identity.object_id
+    }
+  }
+
+  oidc_issuer_enabled       = var.oidc_issuer_enabled
+  workload_identity_enabled = var.workload_identity_enabled
+
+  private_cluster_enabled             = var.private_cluster_enabled
+  private_cluster_public_fqdn_enabled = var.private_cluster_public_fqdn_enabled
+  private_dns_zone_id                 = var.private_cluster_enabled ? var.private_dns_zone_id : null
+
+  network_profile {
+    network_plugin    = var.network_profile.network_plugin
+    network_policy    = var.network_profile.network_policy
+    service_cidr      = var.network_profile.service_cidr
+    dns_service_ip    = var.network_profile.dns_service_ip
+    load_balancer_sku = var.network_profile.load_balancer_sku
+    outbound_type     = var.network_profile.outbound_type
+  }
+
+  azure_active_directory_role_based_access_control {
+    azure_rbac_enabled     = var.azure_rbac_enabled
+    admin_group_object_ids = var.admin_group_object_ids
+  }
+
+  tags = var.tags
+
+  lifecycle {
+    ignore_changes = [
+      # AKS upgrades kubernetes_version and orchestrator_version automatically
+      # via maintenance windows and release channels. Tracking them here causes
+      # perpetual plan drift as the cluster moves past the pinned version.
+      kubernetes_version,
+      default_node_pool[0].orchestrator_version,
+    ]
+
+    precondition {
+      condition     = var.identity_type == "SystemAssigned" || var.control_plane_identity_id != null
+      error_message = "control_plane_identity_id must be provided when identity_type is UserAssigned."
+    }
+
+    precondition {
+      condition     = var.identity_type == "SystemAssigned" || var.kubelet_identity != null
+      error_message = "kubelet_identity must be provided when identity_type is UserAssigned."
+    }
+
+    precondition {
+      condition     = !var.private_cluster_enabled || var.private_dns_zone_id != null
+      error_message = "private_dns_zone_id is required when private_cluster_enabled is true. Pass the zone resource ID for BYO zone, or the string 'System' for an Azure-managed zone."
+    }
+  }
+}
+
+resource "azurerm_kubernetes_cluster_node_pool" "user" {
+  for_each = var.user_node_pools
+
+  name                  = each.key
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
+  vm_size               = each.value.vm_size
+  mode                  = "User"
+  auto_scaling_enabled  = true
+  min_count             = each.value.min_count
+  max_count             = each.value.max_count
+  vnet_subnet_id        = each.value.vnet_subnet_id
+  os_disk_type          = each.value.os_disk_type
+  node_taints           = each.value.node_taints
+  node_labels           = each.value.node_labels
+  orchestrator_version  = var.kubernetes_version
+
+  upgrade_settings {
+    max_surge = each.value.max_surge
+  }
+
+  tags = var.tags
+
+  lifecycle {
+    ignore_changes = [orchestrator_version]
+  }
+}
